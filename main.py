@@ -1,28 +1,44 @@
 from fastapi import FastAPI
-import firebase_admin
-from firebase_admin import credentials, firestore
-
-SERVICE_ACCOUNT_KEY_JSON = "mary-people-test-firebase-adminsdk-d42xf-05ce444e7e.json"
+import crud
+from crud import User
 
 app = FastAPI()
-
-cred = credentials.Certificate(SERVICE_ACCOUNT_KEY_JSON)
-default_app = firebase_admin.initialize_app(cred)
-db = firestore.AsyncClient()
-
-
-async def addData():
-  doc_ref = db.collection("users").document("alovelace")
-  await doc_ref.set({"first": "Ada", "last": "Lovelace", "born": 1815})
 
 
 @app.get("/")
 async def root():
-  # await addData()
   return {"message": "Hello World"}
 
 
-@app.post("/post")
-async def post():
-  await addData()
-  return "new data added to firestore!"
+@app.post('/users')
+async def create_user(user: User):
+  await crud.create_user(user=user)
+  return {
+      "message": "user created!",
+      "body": user
+  }
+
+
+@app.get('/users')
+async def get_users():
+  userlist = await crud.get_users()
+  return {
+      "message": "read all users!",
+      "body": userlist
+  }
+
+
+@app.post('/users/{uid}')
+async def update_username(uid: str, name: str):
+  await crud.update_username(uid=uid, name=name)
+  return {
+      "message": "updated user name!",
+  }
+
+
+@app.delete('/users/{uid}')
+async def delete_user(uid: str):
+  await crud.delete_user(uid=uid)
+  return {
+      "message": "deleted user!"
+  }
